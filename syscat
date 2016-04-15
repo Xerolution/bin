@@ -1,0 +1,58 @@
+#!/bin/sh
+
+c() { tput setaf 4; }
+d() { tput sgr0; }
+
+
+system() {
+    echo "arch linux"
+}
+
+cpuinfo() {
+    sed -n "/model\ name/s/^.*:\ //p" /proc/cpuinfo | sed 1q
+}
+
+mydate() {
+    date
+}
+
+wmname() {
+    echo "2bwm"
+#    xprop -root WM_NAME | cut -d\" -f2
+}
+
+fontname() {
+    echo "lemon"
+}
+
+pkgs() {
+    pacman -Qqs | wc -l
+}
+
+
+cat <<EOF
+
+    $(c)SYSTEM  $(d)$(system)
+    $(c)KERNEL  $(d)$(uname -r)
+  $(c)HOSTNAME  $(d)$(hostname)
+  $(c)PACKAGES  $(d)$(pkgs)
+    $(c)WMNAME  $(d)$(wmname)
+  $(c)TERMINAL  $(d)$TERM
+     $(c)SHELL  $(d)$SHELL
+      $(c)FONT  $(d)$(fontname)
+      $(c)DATE  $(d)$(mydate)
+EOF
+#echo
+#for i in {0..7}; do echo -en " \e[$((30+$i))m${colors[i]}░██░\e[0m"; done
+#echo
+#for i in {8..15}; do echo -en " \e[1;$((22+$i))m${colors[i]}░██░\e[0m"; done
+#echo
+#echo
+printf "\n"                                                                                         
+i=0
+while [ $i -le 6 ]
+do
+  printf "  \e[$((i+41))m\e[$((i+30))m█▓▒░"
+    i=$(($i+1))
+  done
+  printf "\e[37m█\e[0m▒░\n\n"

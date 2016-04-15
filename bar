@@ -1,0 +1,64 @@
+#!/bin/sh
+
+. $XDG_CONFIG_HOME/lemonbar/config
+
+clock() {
+    clock=$(date "+%H:%M:%S")	
+    echo "%{F$C06}⮖%{F-} ${clock}"
+}
+
+volume() {
+	vol=$(amixer get PCM | sed -n 's/^.*\[\([0-9]\+\)%.*$/\1/p'| uniq)
+    echo "%{F$C06}⮞%{F-} ${vol}%"
+}
+
+cpuload() {
+    LINE=`ps -eo pcpu |grep -vE '^\s*(0.0|%CPU)' |sed -n '1h;$!H;$g;s/\n/ +/gp'`
+    cpu=$(bc <<< $LINE)
+    echo "%{F$C11}⮡ ${cpu}%%{F-}"
+}
+
+memused() {
+    read t f <<< `grep -E 'Mem(Total|Free)' /proc/meminfo |awk '{print $2}'`
+    mem=$(bc <<< "scale=2; 100 - $f / $t * 100" | cut -d. -f1)
+    echo "%{F$C11}⮡ ${mem}%%{F-}"
+}
+
+network() {
+    ping -c 1 8.8.8.8 >/dev/null 2>&1 && 
+    echo "%{F$C06}⮷%{F-} on" || echo "%{F$C01}⮹%{F-} off"
+}
+
+groups() { # Current Workspace as Icons
+    cur=`xprop -root _NET_CURRENT_DESKTOP | awk '{print $3}'`
+    tot=`xprop -root _NET_NUMBER_OF_DESKTOPS | awk '{print $3}'`
+
+    for w in `seq 0 $((cur - 1))`; do line="${line}%{F$C09} •%{F-}"; done
+    line="${line}%{F$C12} ⮧%{F-}"
+    for w in `seq $((cur + 2)) $tot`; do line="${line}%{F$C09} •%{F-}"; done
+    echo $line
+}
+
+ws(){ # Current Workspace as Numbers 
+     ws=`xprop -root _NET_CURRENT_DESKTOP | awk '{print $3}'`
+     echo "%{F$C06}⮠%{F-} $ws"
+}
+
+nowplaying() {
+     cur=`mpc current`
+     test -n "$cur" && echo "%{F$C06}⮕%{F-} $cur" || echo "%{F$C01}⮔ - stopped -%{F-}"
+}
+
+button() {
+      echo "%{F$C06}%{A3:shutdown -r now:}%{A:shutdown -h now:} ⮪ %{A}%{A}%{F-}"
+      }
+
+updates() {
+      upd=`checkupdates | wc -l`
+      echo "%{F$C15}⮼ ${upd}%{F-}"
+      }
+
+while :; do 	
+	echo "%{B$BG}  $(ws)  $(volume)  $(nowplaying)  %{B-}  %{r}%{B$BG}  $(network)  $(clock) $(button) %{B-}"
+         sleep 0.5	
+ done | lemonbar -g ${BW}x${BH}+${BX}+${BY} -f "$FONT1" -B "#00000000" -F "$FG" -p | while read line; do eval "$line"; done
