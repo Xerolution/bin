@@ -45,7 +45,7 @@ ws(){ # Current Workspace as Numbers
 }
 
 nowplaying() {
-     cur=`mpc current`
+     cur=`mpc -p 6660 current`
      test -n "$cur" && echo "%{F$C06}⮕%{F-} $cur" || echo "%{F$C01}⮔ - stopped -%{F-}"
 }
 
